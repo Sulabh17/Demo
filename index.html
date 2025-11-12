@@ -1,0 +1,38 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Custom Cast Receiver</title>
+  <script src="https://www.gstatic.com/cast/sdk/libs/caf_receiver/v3/cast_receiver_framework.js"></script>
+  <style>
+    video { transform-origin: center center; background: black; will-change: transform; }
+  </style>
+</head>
+<body>
+<script>
+  const context = cast.framework.CastReceiverContext.getInstance();
+  const playerManager = context.getPlayerManager();
+
+  // Apply zoom/speed from sender customData on LOAD
+  playerManager.setMessageInterceptor(
+    cast.framework.messages.MessageType.LOAD,
+    req => {
+      const cd = (req && req.media && req.media.customData) || {};
+      const rate = Number(cd.playbackRate || 1.0);
+      const zoom = Number(cd.zoom || 1.0);
+      const panX = Number(cd.panX || 0);
+      const panY = Number(cd.panY || 0);
+
+      const video = playerManager.getMediaElement ? playerManager.getMediaElement() : null;
+      if (video) {
+        try { video.playbackRate = rate; } catch (e) {}
+        video.style.transform = `translate(${panX}px, ${panY}px) scale(${zoom})`;
+      }
+      return req;
+    }
+  );
+
+  context.start();
+</script>
+</body>
+</html>
